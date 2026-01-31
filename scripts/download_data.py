@@ -3,9 +3,11 @@ import zipfile
 from kaggle.api.kaggle_api_extended import KaggleApi
 
 
+
 def download_employee_attrition_dataset():
 
     # Paths
+    
     data_dir = Path("data/raw")
     data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -13,10 +15,12 @@ def download_employee_attrition_dataset():
     zip_path = data_dir / "ibm-hr-analytics-attrition-dataset.zip"
 
     # Authenticate with Kaggle
+
     api = KaggleApi()
     api.authenticate()
 
     # Download dataset (ZIP)
+
     print("Downloading dataset from Kaggle...")
     api.dataset_download_files(
         dataset_name,
@@ -25,6 +29,7 @@ def download_employee_attrition_dataset():
     )
 
     # Extract ZIP
+
     print("Extracting dataset...")
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_dir)
