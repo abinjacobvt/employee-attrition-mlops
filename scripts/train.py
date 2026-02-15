@@ -1,12 +1,11 @@
 import os
-from src.preprocess import preprocess_data
 
-
-from src.models.train_model import train_model, evaluate_model
+from attrition.models.train import evaluate_model, train_model
+from attrition.utils.preprocess import preprocess_data
 
 
 def main():
-    # ✔ Path to dataset (place IBM HR dataset CSV inside data/raw/)
+    # Path to dataset
     data_path = os.path.join("data", "raw", "WA_Fn-UseC_-HR-Employee-Attrition.csv")
 
     print("Loading and preprocessing data...")
@@ -18,12 +17,11 @@ def main():
     print("Evaluating model...")
     accuracy, report = evaluate_model(model, X_test, y_test)
 
-    print("\n Model Performance")
+    print("\nModel Performance")
     print(f"Accuracy: {accuracy:.4f}")
     print("\nClassification Report:\n")
     print(report)
 
 
 if __name__ == "__main__":
-    # ✔ Entry point for training pipeline
     main()
