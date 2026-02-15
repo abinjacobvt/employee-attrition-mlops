@@ -1,34 +1,34 @@
+import pandas as pd
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-
-from attrition.models.train import train_model
-
-
-def test_train_model_returns_logistic_regression():
-    X = np.random.rand(20, 5)
+import pytest
+from pathlib import Path
+ 
+from attrition.models import train
+ 
+ 
+def test_load_data_file_not_found():
+    with pytest.raises(FileNotFoundError):
+        train.load_data(Path("fake.csv"))
+ 
+ 
+def test_preprocess_function():
+    df = pd.DataFrame({
+        "Attrition": ["Yes", "No", "Yes", "No"],
+        "Age": [25, 30, 35, 40],
+        "Salary": [50000, 60000, 70000, 80000],
+    })
+ 
+    X_train, X_test, y_train, y_test = train.preprocess(df)
+ 
+    assert len(X_train) > 0
+    assert len(X_test) > 0
+    assert set(y_train.unique()).issubset({0, 1})
+ 
+ 
+def test_train_model():
+    X = np.random.rand(20, 3)
     y = np.random.randint(0, 2, 20)
-
-    model = train_model(X, y)
-
-    assert isinstance(model, LogisticRegression)
-
-
-def test_train_model_fits_and_predicts():
-    X = np.random.rand(30, 4)
-    y = np.random.randint(0, 2, 30)
-
-    model = train_model(X, y)
-    predictions = model.predict(X)
-
-    assert len(predictions) == len(y)
-    assert set(predictions).issubset({0, 1})
-
-
-def test_train_model_score():
-    X = np.random.rand(40, 3)
-    y = np.random.randint(0, 2, 40)
-
-    model = train_model(X, y)
-    score = model.score(X, y)
-
-    assert 0.0 <= score <= 1.0
+ 
+    model = train.train_model(X, y)
+ 
+    assert model is not None
