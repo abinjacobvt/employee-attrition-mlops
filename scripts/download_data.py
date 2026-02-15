@@ -1,14 +1,13 @@
-##Libarary imports
-from pathlib import Path
+# Libarary imports
 import zipfile
+from pathlib import Path
+
 from kaggle.api.kaggle_api_extended import KaggleApi
 
 
-
 def download_employee_attrition_dataset():
-
     # Paths
-    
+
     data_dir = Path("data/raw")
     data_dir.mkdir(parents=True, exist_ok=True)
 
@@ -23,11 +22,7 @@ def download_employee_attrition_dataset():
     # Download dataset (ZIP)
 
     print("Downloading dataset from Kaggle...")
-    api.dataset_download_files(
-        dataset_name,
-        path=data_dir,
-        unzip=False
-    )
+    api.dataset_download_files(dataset_name, path=data_dir, unzip=False)
 
     # Extract ZIP
 
@@ -35,7 +30,6 @@ def download_employee_attrition_dataset():
     with zipfile.ZipFile(zip_path, "r") as zip_ref:
         zip_ref.extractall(data_dir)
 
- 
     # Rename CSV to standard name
     original_csv = data_dir / "WA_Fn-UseC_-HR-Employee-Attrition.csv"
     final_csv = data_dir / "employee_attrition.csv"
@@ -44,10 +38,7 @@ def download_employee_attrition_dataset():
         original_csv.rename(final_csv)
         print("CSV renamed to employee_attrition.csv")
     else:
-        raise FileNotFoundError(
-            "Expected CSV file not found after extraction."
-        )
-
+        raise FileNotFoundError("CSV not found after extraction")
     print("Dataset downloaded directly from Kaggle successfully!")
 
 

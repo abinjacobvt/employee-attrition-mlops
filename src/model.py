@@ -1,4 +1,4 @@
-##Test and Training Model
+# Test and Training Model
 
-## source code will added later to cosume the API data
-## model.py
+# source code will added later to cosume the API data
+# model.py
