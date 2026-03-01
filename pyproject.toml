@@ -3,13 +3,17 @@ name = "employee-attrition-mlops"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11,<3.12"
 dependencies = [
+    "fastapi>=0.135.0",
     "kaggle>=1.8.3",
+    "mlflow>=1.27.0",
     "numpy>=2.4.1",
     "pandas>=3.0.0",
+    "protobuf==3.20.3",
     "requests>=2.32.5",
     "scikit-learn>=1.8.0",
+    "uvicorn>=0.41.0",
 ]
 
 [dependency-groups]
