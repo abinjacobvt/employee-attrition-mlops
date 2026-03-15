@@ -3,11 +3,11 @@
 **MSc Data Science and Computer Science — ESILV**
 **Course:** MLOps | **Period:** January 5, 2026 – March 15, 2026
 
-### Team Memebrs
-Abin Jacob
-Srinivasan Dhakshanamoorthy
-ANBALAGAN Venkat Subbramani
-MURALIKRISHNAN Vishnu
+### Team Members
+- Abin Jacob  
+- Srinivasan Dhakshanamoorthy  
+- ANBALAGAN Venkat Subbramani  
+- MURALIKRISHNAN Vishnu
 
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
