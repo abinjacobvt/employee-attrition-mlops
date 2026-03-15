@@ -395,6 +395,8 @@ All prediction errors are caught and returned with appropriate HTTP status codes
 
 ## 9. Demo Video
 
+Link : https://youtu.be/PqZBywHYHJI
+
 The demo covers:
 - CI pipeline, Docker build, and app startup
 - FastAPI endpoint walkthrough (`/health` and `/predict`)
