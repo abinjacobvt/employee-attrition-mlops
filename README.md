@@ -1,177 +1,240 @@
-Employee Attrition MLOps Project
-MSc Data Engineering & Artificial Intelligence – ESILV
-📌 Project Overview
+# Employee Attrition MLOps Project — Final Report
 
-This project implements a complete end-to-end MLOps pipeline to predict employee attrition using machine learning.
+**MSc Data Science and Computer Science — ESILV**
+**Course:** MLOps | **Period:** January 5, 2026 – March 15, 2026
 
-The objective is to simulate a production-ready ML system that includes:
+### Team Memebrs
+Abin Jacob
+Srinivasan Dhakshanamoorthy
+ANBALAGAN Venkat Subbramani
+MURALIKRISHNAN Vishnu
 
-Data preprocessing and model training
 
-Experiment tracking using MLflow
+![Python](https://img.shields.io/badge/python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-green)
+![MLflow](https://img.shields.io/badge/MLflow-experiments-orange)
+![Docker](https://img.shields.io/badge/Docker-container-blue)
+![pytest](https://img.shields.io/badge/coverage-70%25-brightgreen)
 
-Code quality and testing discipline
+---
 
-REST API model serving using FastAPI
+##  Table of Contents
 
-Docker containerization
+1. [Project Overview](#1-project-overview)
+2. [Problem Definition & Data](#2-problem-definition--data)
+3. [Model Performance](#3-model-performance)
+4. [System Architecture](#4-system-architecture)
+5. [MLOps Practices](#5-mlops-practices)
+6. [Monitoring & Reliability](#6-monitoring--reliability)
+7. [Team Collaboration](#7-team-collaboration)
+8. [Limitations & Future Work](#8-limitations--future-work)
+9. [Demo Video](#9-demo-video)
 
-Team-based Git collaboration
+---
 
-The project is structured across multiple checkpoints to progressively build a full MLOps workflow.
+## 1. Project Overview
 
-🎯 Problem Statement
+This project implements a **complete end-to-end MLOps pipeline** for predicting employee attrition using machine learning. It was developed as part of the MSc Data Engineering & Artificial Intelligence program at ESILV, simulating a production-ready ML system.
 
-Employee attrition prediction helps organizations identify employees who are likely to leave the company.
+The project was built progressively across four checkpoints, covering everything from a baseline training pipeline to a fully containerized, API-served, and monitored system.
 
-Using historical HR data, we build a classification model that predicts:
+### Key Objectives
 
-0 → No Attrition
+- Build a reproducible ML training pipeline
+- Track experiments with MLflow
+- Serve the trained model via a REST API using FastAPI
+- Containerize the full application with Docker
+- Apply professional software engineering practices throughout
 
-1 → Attrition
+---
 
-✅ Checkpoint 1 — Baseline ML Pipeline
+## 2. Problem Definition & Data
 
-The first stage focused on building a reliable and reproducible ML pipeline.
+### Problem Statement
 
-Implementations
+**Employee attrition** refers to the voluntary departure of employees from an organization. Predicting attrition allows HR departments to take proactive retention measures, reducing recruitment costs and knowledge loss.
 
-Dataset loading from CSV
+This project frames attrition as a **binary classification task**:
 
-Target encoding (Yes → 1, No → 0)
+| Label | Meaning |
+|-------|---------|
+| `0` | No Attrition (employee stays) |
+| `1` | Attrition (employee leaves) |
 
-Feature preprocessing using ColumnTransformer
+### Dataset
 
-Train/test split (80/20)
+- **Source:** IBM HR Analytics Employee Attrition & Performance dataset (via Kaggle)
+- **Format:** CSV — `data/raw/employee_attrition.csv`
+- **Target column:** `Attrition` (encoded as `Yes → 1`, `No → 0`)
+- **Split:** 80% training / 20% test
 
-Logistic Regression classifier
+### Features
 
-Accuracy evaluation (~89%)
+The dataset includes 30 employee-level features across demographics, job role, compensation, and satisfaction metrics, including:
 
-Why a Pipeline?
+- `Age`, `Gender`, `MaritalStatus`
+- `Department`, `JobRole`, `JobLevel`
+- `MonthlyIncome`, `DailyRate`, `HourlyRate`
+- `OverTime`, `BusinessTravel`, `DistanceFromHome`
+- `JobSatisfaction`, `EnvironmentSatisfaction`, `WorkLifeBalance`
+- `YearsAtCompany`, `YearsInCurrentRole`, `YearsSinceLastPromotion`
 
-We used a Pipeline to ensure:
+### Preprocessing
 
-Consistent preprocessing during training
+A `ColumnTransformer` pipeline handles:
 
-Identical transformations during inference
+- **Numerical features:** StandardScaler
+- **Categorical features:** OneHotEncoder
 
-Production-ready architecture
+---
 
-✅ Checkpoint 2 — Code Quality & Experiment Tracking
+## 3. Model Performance
 
-This stage focused on improving software engineering practices and reproducibility.
+The baseline Logistic Regression model achieved the following performance on the held-out test set:
 
-🔹 Code Quality
+| Metric | Score |
+|--------|-------|
+| Accuracy | ~0.89 |
+| Precision | ~0.84 |
+| Recall | ~0.77 |
+| F1-score | ~0.80 |
 
-Pre-commit hooks configured for:
+These results provide a strong baseline while keeping the model simple and interpretable. All metrics were logged automatically to MLflow for reproducibility and comparison across runs.
 
-Black → automatic formatting
+---
 
-isort → import sorting
+## 4. System Architecture
 
-Flake8 → linting
+### Project Structure
 
-Activate pre-commit:
+```
+employee-attrition-mlops/
+│
+├── data/raw/employee_attrition.csv       # Raw dataset
+├── src/attrition/
+│   ├── api/
+│   │   ├── main.py                       # FastAPI app
+│   │   ├── model_loader.py               # Loads model.joblib
+│   │   └── schema.py                     # Pydantic request/response schema
+│   └── models/
+│       └── train.py                      # Training logic
+│
+├── scripts/
+│   └── train_pipeline.py                 # Entry point for training
+├── tests/                                # Unit tests (pytest)
+├── model.joblib                          # Serialized sklearn pipeline
+├── mlflow.db                             # MLflow tracking database
+├── Dockerfile                            # Container definition
+├── pyproject.toml                        # Project metadata & dependencies
+├── uv.lock                               # Locked dependency versions
+└── README.md                             # This file
+```
 
+### ML Pipeline
+
+```
+Raw CSV Data
+    └── Preprocessing (ColumnTransformer)
+            ├── StandardScaler      (numerical features)
+            └── OneHotEncoder       (categorical features)
+                    └── Logistic Regression Classifier
+                            └── model.joblib  (exported artifact)
+```
+
+This ensures **identical transformations** are applied at both training and inference time.
+
+### Serving Architecture
+
+```
+Client (HTTP)
+    └── FastAPI (uvicorn)
+            ├── POST /predict  →  model_loader.py  →  model.joblib  →  prediction
+            └── GET  /health   →  {"status": "healthy"}
+```
+
+The model is decoupled from the training step — inference loads `model.joblib` directly, enabling independent deployment.
+
+---
+
+## 5. MLOps Practices
+
+### 5.1 Environment Management
+
+- **Tool:** [uv](https://github.com/astral-sh/uv) — a fast Python package manager
+- Dependencies declared in `pyproject.toml`
+- Exact versions locked in `uv.lock` for full reproducibility
+- Python version pinned: `>=3.11, <3.12`
+
+### 5.2 Code Quality
+
+Pre-commit hooks are configured in `.pre-commit-config.yaml` and run automatically on every commit:
+
+| Hook | Purpose |
+|------|---------|
+| `black` | Automatic code formatting |
+| `isort` | Import sorting |
+| `flake8` | Linting (style & errors) |
+
+**Install hooks:**
+```bash
 pre-commit install
+```
 
-Run manually:
-
+**Run manually:**
+```bash
 pre-commit run --all-files
-🔹 Unit Testing
+```
 
-Testing tools used:
+### 5.3 Unit Testing
 
-pytest
+- **Framework:** `pytest` with `pytest-cov`
+- **Coverage:** ≥ 70%
+- Tests are located in the `tests/` directory and cover preprocessing, model loading, and API endpoints.
 
-pytest-cov
-
-Run tests:
-
+**Run tests with coverage:**
+```bash
 pytest --cov=src
+```
 
-Current test coverage: ≥ 70%
+### 5.4 Experiment Tracking with MLflow
 
-This ensures reliability and maintainability of the codebase.
+MLflow is integrated to provide full experiment reproducibility. Each training run logs:
 
-🔹 MLflow Experiment Tracking
+| Logged Item | Description |
+|-------------|-------------|
+| Model type | e.g., `LogisticRegression` |
+| Hyperparameters | e.g., `max_iter`, `C` |
+| Accuracy score | Test set accuracy (~89%) |
+| Model artifact | Full sklearn pipeline |
 
-MLflow is integrated to track:
-
-Model parameters
-
-Evaluation metrics
-
-Model artifacts
-
-Experiment runs
-
-Train the Model
+**Train the model:**
+```bash
 python scripts/train_pipeline.py
-Launch MLflow UI
+```
+
+**Launch MLflow UI:**
+```bash
 mlflow ui
+```
+Access at: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
-Open in browser:
+- **Experiment name:** `Attrition_Experiments`
+- **Backend store:** `mlflow.db` (SQLite)
 
-http://127.0.0.1:5000
+### 5.5 Model Serving (FastAPI)
 
-Experiment name:
+The trained model is served as a REST API with the following endpoints:
 
-Attrition_Experiments
+#### `GET /health`
 
-Each run logs:
+```json
+{ "status": "healthy" }
+```
 
-Model type
+#### `POST /predict`
 
-Hyperparameters
-
-Accuracy score
-
-Serialized pipeline model
-
-✅ Checkpoint 3 — Model Serving & Deployment
-
-This stage focuses on production-level serving and containerization.
-
-🔹 Model Export
-
-After training, the full sklearn pipeline is exported as:
-
-model.joblib
-
-This allows:
-
-Decoupling training from inference
-
-Independent model serving
-
-Clean Docker deployment
-
-🔹 FastAPI REST API
-
-The trained model is served using FastAPI.
-
-Available Endpoints
-1️⃣ Health Check
-GET /health
-
-Response:
-
-{
-  "status": "healthy"
-}
-2️⃣ Prediction Endpoint
-POST /predict
-
-Validated using Pydantic schema
-
-Applies full preprocessing pipeline
-
-Returns binary prediction
-
-Example Request:
-
+**Example request:**
+```json
 {
   "Age": 35,
   "BusinessTravel": "Travel_Rarely",
@@ -204,102 +267,162 @@ Example Request:
   "YearsSinceLastPromotion": 1,
   "YearsWithCurrManager": 2
 }
+```
 
-Example Response:
+**Example response:**
+```json
+{ "prediction": 0 }
+```
 
-{
-  "prediction": 0
-}
-🔹 Logging & Monitoring
+The API uses **Pydantic** for request validation, ensuring type safety and clear error messages.
 
-The API includes:
+**Start the API locally:**
+```bash
+uvicorn src.attrition.api.main:app --reload
+```
 
-Request logging
+Access Swagger UI at: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-Prediction logging
+### 5.6 Docker Containerization
 
-Error handling
+The application is fully containerized using a `python:3.11-slim` base image.
 
-Response time measurement
-
-🔹 Docker Containerization
-
-The application is containerized using Python 3.11-slim.
-
-Build Docker Image
+**Build the image:**
+```bash
 docker build -t attrition-api .
-Run Docker Container
+```
+
+**Run the container:**
+```bash
 docker run -p 8000:8000 attrition-api
+```
 
-Access Swagger UI:
+Access Swagger UI at: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-http://localhost:8000/docs
-📂 Project Structure
-employee-attrition-mlops/
-│
-├── data/raw/employee_attrition.csv
-├── src/attrition/
-│   ├── api/
-│   │   ├── main.py
-│   │   ├── model_loader.py
-│   │   └── schema.py
-│   └── models/
-│       └── train.py
-│
-├── scripts/train_pipeline.py
-├── tests/
-├── model.joblib
-├── Dockerfile
-├── pyproject.toml
-├── uv.lock
-└── README.md
-🔁 Reproducibility
+---
 
-Environment management:
+## 6. Monitoring & Reliability
 
+### Request & Prediction Logging
+
+The FastAPI application includes structured logging for every request and response:
+
+- **Incoming request:** method, path, input payload
+- **Prediction result:** model output, timestamp
+- **Errors:** exception type, stack trace
+- **Response time:** measured per request for latency monitoring
+
+### Health Check Endpoint
+
+A dedicated `/health` endpoint allows uptime monitoring tools (e.g., Docker healthcheck, load balancers) to verify that the service is alive.
+
+### Error Handling
+
+All prediction errors are caught and returned with appropriate HTTP status codes and descriptive messages, preventing silent failures in production.
+
+### Model Reliability
+
+- The model is loaded **once at startup** (not per-request) to minimize latency.
+- The `model.joblib` artifact packages the full preprocessing + classifier pipeline, eliminating any risk of preprocessing drift between training and inference.
+
+### Monitoring Strategy
+
+| Layer | Monitoring Approach |
+|-------|---------------------|
+| API availability | `/health` endpoint |
+| Request volume | Request logging per endpoint |
+| Prediction distribution | Prediction logging (0 vs 1 ratio) |
+| Errors | Exception logging with HTTP 500 responses |
+| Response time | Per-request timing logs |
+
+---
+
+## 7. Team Collaboration
+
+### Git & GitHub Workflow
+
+- Feature-based branching strategy
+- Pull Requests required for merging into `main`
+- Each PR reviewed and approved by at least one other team member
+- Commit history reflects individual contributions
+
+### Commit Convention
+
+| Prefix | Purpose |
+|--------|---------|
+| `feat:` | New feature |
+| `fix:` | Bug fix |
+| `test:` | Adding or updating tests |
+| `docs:` | Documentation changes |
+| `chore:` | Maintenance tasks |
+| `refactor:` | Code restructuring |
+
+### Checkpoint Delivery
+
+| Checkpoint | Due Date | Status |
+|------------|----------|--------|
+| CP1 — Project Setup & Foundations | Feb 1, 2026 | ✅ Completed |
+| CP2 — Code Quality & Experiment Tracking | Feb 15, 2026 | ✅ Completed |
+| CP3 — Model Serving & Containerization | Mar 1, 2026 | ✅ Completed |
+| CP4 — Monitoring, Polish & Final Report | Mar 15, 2026 | ✅ Completed |
+
+---
+
+## 8. Limitations & Future Work
+
+### Current Limitations
+
+| Area | Limitation |
+|------|-----------|
+| **Model** | Only Logistic Regression was evaluated; no hyperparameter search |
+| **Data** | Static CSV dataset with no automated ingestion or updates |
+| **Monitoring** | Logging is stdout-based only; no dashboarding or alerting |
+| **CI/CD** | No automated GitHub Actions pipeline for testing or deployment |
+| **Model versioning** | MLflow artifacts are local; no model registry promotion workflow |
+| **Class imbalance** | Dataset is imbalanced (~84% no-attrition); no oversampling applied |
+
+### Future Work
+
+- **Model improvement:** Experiment with Random Forest, XGBoost, and ensemble methods; address class imbalance with SMOTE or class weighting
+- **CI/CD pipeline:** Add GitHub Actions workflow to run tests, lint, and build Docker image on every push
+- **Model registry:** Use MLflow Model Registry to promote models from `Staging → Production`
+- **Automated retraining:** Trigger retraining when data drift is detected
+- **Monitoring dashboard:** Integrate Prometheus + Grafana for real-time metrics visualization
+- **Data pipeline:** Replace manual CSV with automated ingestion from a database or data warehouse
+- **Authentication:** Add API key or OAuth authentication to the FastAPI service for production use
+
+---
+
+## 9. Demo Video
+
+The demo covers:
+- CI pipeline, Docker build, and app startup
+- FastAPI endpoint walkthrough (`/health` and `/predict`)
+- Example request and response via Swagger UI
+
+---
+
+## 🔁 Reproducibility
+
+```bash
+# 1. Install dependencies
 uv sync
 
-Dependencies tracked in:
+# 2. Train the model
+python scripts/train_pipeline.py
 
-pyproject.toml
+# 3. Launch MLflow UI
+mlflow ui
 
-uv.lock
+# 4. Start the API
+uvicorn src.attrition.api.main:app --reload
 
-Python version:
+# 5. Run tests
+pytest --cov=src
 
->= 3.11
-👥 Team Collaboration
+# 6. Build & run with Docker
+docker build -t attrition-api .
+docker run -p 8000:8000 attrition-api
+```
 
-GitHub-based development
-
-Feature-based commits
-
-Pull request workflow
-
-Conventional commit messages:
-
-feat:
-
-test:
-
-docs:
-
-chore:
-
-refactor:
-
- Final Outcome
-
-This project demonstrates:
-
-End-to-end ML pipeline development
-
-Experiment tracking with MLflow
-
-API-based model serving
-
-Containerized deployment
-
-Professional MLOps practices
-
-Collaborative team workflow
+---
